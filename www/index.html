@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CardioVision Pro Clinical ECG</title>
+    <!-- Tailwind CSS for robust modern medical UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #040711;
+            color: #f1f5f9;
+            touch-action: manipulation;
+        }
+        .mono-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .app-shell {
+            max-width: 640px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #040711;
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-[#040711] text-slate-100 antialiased">
+    <div class="app-shell shadow-2xl border-x border-slate-900">
+        <!-- Top App Navigation -->
+        <header class="flex justify-between items-center px-4 py-3.5 bg-[#090d16] border-b border-slate-800/80 sticky top-0 z-50">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 rounded-xl flex items-center justify-center font-extrabold text-white text-base shadow-lg shadow-blue-500/20">
+                    CV
+                </div>
+                <div>
+                    <p class="text-[10px] text-cyan-400 uppercase tracking-widest font-bold">12-Derivasyon Klinik Analiz</p>
+                    <h1 class="text-sm font-bold text-slate-100">CardioVision Pro v4.1</h1>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] bg-cyan-500/10 text-cyan-400 px-2.5 py-1 rounded-full font-bold border border-cyan-500/20">Aktif Şerit</span>
+                <button id="resetBtn" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer">Sıfırla</button>
+            </div>
+        </header>
+
+        <!-- Main Scrollable Content Area -->
+        <main class="p-4 flex flex-col gap-5 pb-20">
+            <!-- Section 1: Source Upload & Sample Scenarios -->
+            <section class="flex flex-col gap-3">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">1. Patoloji Kütüphanesi & ECG Kaynağı</h2>
+                </div>
+
+                <!-- Upload Box -->
+                <label class="border-2 border-dashed border-slate-800 bg-[#090d16] hover:border-cyan-500/50 rounded-xl p-4 flex items-center gap-4 cursor-pointer transition group">
+                    <input id="ecgUpload" type="file" accept="image/*" class="hidden" />
+                    <div class="w-11 h-11 bg-slate-900 group-hover:bg-cyan-500/10 rounded-xl flex items-center justify-center text-cyan-400 text-lg transition">
+                        ⚡
+                    </div>
+                    <div>
+                        <strong class="text-xs font-semibold block text-slate-200">12-Derivasyonlu ECG Görüntüsü Yükle</strong>
+                        <small class="text-[11px] text-slate-400">Yüksek çözünürlüklü dijital tarama</small>
+                    </div>
+                </label>
+
+                <!-- Sample Scenarios Grid -->
+                <div class="bg-[#090d16] border border-slate-800/80 rounded-xl p-3.5 flex flex-col gap-2.5">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xs font-semibold text-slate-200">Akademik Patoloji Senaryoları</h3>
+                        <button id="openDrawerBtn" class="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-2.5 py-1 rounded-lg text-[11px] font-medium transition flex items-center gap-1.5 cursor-pointer">
+                            <span>⚙️ Ritim Parametreleri</span>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button class="sample-card bg-slate-900/60 hover:bg-slate-900 border border-slate-800 active:border-cyan-500 rounded-lg p-2.5 flex flex-col items-center gap-1.5 text-center transition cursor-pointer" type="button" data-sample="normal">
+                            <span class="w-full h-3.5 rounded bg-gradient-to-r from-emerald-500 to-cyan-400 block"></span>
+                            <span class="text-[10px] font-medium text-slate-300">Normal Sinüs</span>
+                        </button>
+                        <button class="sample-card bg-slate-900/60 hover:bg-slate-900 border border-slate-800 active:border-cyan-500 rounded-lg p-2.5 flex flex-col items-center gap-1.5 text-center transition cursor-pointer" type="button" data-sample="anteriorStemi">
+                            <span class="w-full h-3.5 rounded bg-gradient-to-r from-red-500 to-rose-700 block"></span>
+                            <span class="text-[10px] font-medium text-slate-300">Anterior STEMI</span>
+                        </button>
+                        <button class="sample-card bg-slate-900/60 hover:bg-slate-900 border border-slate-800 active:border-cyan-500 rounded-lg p-2.5 flex flex-col items-center gap-1.5 text-center transition cursor-pointer" type="button" data-sample="inferiorStemi">
+                            <span class="w-full h-3.5 rounded bg-gradient-to-r from-rose-600 to-red-800 block"></span>
+                            <span class="text-[10px] font-medium text-slate-300">İnferior STEMI</span>
+                        </button>
+                        <button class="sample-card bg-slate-900/60 hover:bg-slate-900 border border-slate-800 active:border-cyan-500 rounded-lg p-2.5 flex flex-col items-center gap-1.5 text-center transition cursor-pointer" type="button" data-sample="vt">
+                            <span class="w-full h-3.5 rounded bg-gradient-to-r from-red-600 to-amber-600 block"></span>
+                            <span class="text-[10px] font-medium text-slate-300">VT / Geniş QRS</span>
+                        </button>
+                        <button class="sample-card bg-slate-900/60 hover:bg-slate-900 border border-slate-800 active:border-cyan-500 rounded-lg p-2.5 flex flex-col items-center gap-1.5 text-center transition cursor-pointer" type="button" data-sample="af">
+                            <span class="w-full h-3.5 rounded bg-gradient-to-r from-amber-500 to-orange-600 block"></span>
+                            <span class="text-[10px] font-medium text-slate-300">AF + RVR</span>
+                        </button>
+                        <button class="sample-card bg-slate-900/60 hover:bg-slate-900 border border-slate-800 active:border-cyan-500 rounded-lg p-2.5 flex flex-col items-center gap-1.5 text-center transition cursor-pointer" type="button" data-sample="brugada">
+                            <span class="w-full h-3.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 block"></span>
+                            <span class="text-[10px] font-medium text-slate-300">Brugada Tip 1</span>
+                        </button>
+                        <button class="sample-card bg-slate-900/60 hover:bg-slate-900 border border-slate-800 active:border-cyan-500 rounded-lg p-2.5 flex flex-col items-center gap-1.5 text-center transition cursor-pointer" type="button" data-sample="hyperkalemia">
+                            <span class="w-full h-3.5 rounded bg-gradient-to-r from-blue-500 to-teal-400 block"></span>
+                            <span class="text-[10px] font-medium text-slate-300">Hiperkalemi</span>
+                        </button>
+                        <button class="sample-card bg-slate-900/60 hover:bg-slate-900 border border-slate-800 active:border-cyan-500 rounded-lg p-2.5 flex flex-col items-center gap-1.5 text-center transition cursor-pointer" type="button" data-sample="avBlock3">
+                            <span class="w-full h-3.5 rounded bg-gradient-to-r from-pink-600 to-indigo-600 block"></span>
+                            <span class="text-[10px] font-medium text-slate-300">3. Derece Blok</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preview Stage -->
+                <div class="bg-[#090d16] border border-slate-800/80 rounded-xl p-3.5 flex flex-col gap-2.5">
+                    <div class="flex justify-between items-center text-xs text-slate-400">
+                        <span id="previewStatus" class="font-medium">Giriş Bekleniyor</span>
+                        <button id="analyzeBtn" class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold px-3.5 py-1.5 rounded-lg text-xs transition shadow-md shadow-blue-600/20 cursor-pointer">Klinik Analizi Başlat</button>
+                    </div>
+                    <div class="w-full h-36 bg-slate-950 rounded-lg border border-slate-800 flex items-center justify-center overflow-hidden relative">
+                        <img id="uploadedImage" alt="ECG Görüntüsü" class="w-full h-full object-cover" hidden />
+                        <div id="emptyState" class="text-xs text-slate-500">Analiz için ECG seçin veya yükleyin</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Clinical Evaluation & True 12-Lead ECG Strip Display -->
+            <section class="flex flex-col gap-3">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">2. Kardiyolojik Triyaj & 12-Derivasyon Şerit Monitörü</h2>
+                </div>
+
+                <!-- Summary Card -->
+                <div class="bg-[#090d16] border border-slate-800/80 rounded-xl p-4 flex justify-between items-center shadow-lg">
+                    <div>
+                        <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Klinik Tanı Öngörüsü</p>
+                        <h3 id="summaryTitle" class="text-sm font-bold text-slate-100 mt-0.5">Normal Sinüs Ritmi</h3>
+                    </div>
+                    <div id="riskPill" class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase border bg-emerald-500/10 text-emerald-400 border-emerald-500/30 tracking-wider">
+                        NORMAL
+                    </div>
+                </div>
+
+                <!-- True 12-Lead ECG Grid Display Panel -->
+                <div class="bg-[#020617] border-2 border-red-500/30 rounded-xl p-3.5 flex flex-col gap-3 shadow-xl">
+                    <div class="flex justify-between items-center border-b border-red-500/20 pb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+                            <span class="text-red-400 font-bold uppercase tracking-wider text-[11px]">12-Derivasyon Eş Zamanlı Şerit Analizi</span>
+                        </div>
+                        <span class="text-[10px] text-red-300 font-mono">25 mm/s | 10 mm/mV</span>
+                    </div>
+
+                    <!-- 12-Lead Canvas Multi-strip -->
+                    <div class="w-full bg-[#030712] rounded-lg border border-red-500/20 p-2 overflow-x-auto">
+                        <canvas id="multiLeadCanvas" class="w-full block" width="600" height="420"></canvas>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] text-slate-400 font-mono">
+                        <span>Standart I, II, III, aVR, aVL, aVF, V1-V6 Matrisi</span>
+                        <span id="activeLeadStatus" class="text-red-400">Normal Sinüs Ritmi</span>
+                    </div>
+                </div>
+
+                <!-- Numerical ECG Metrics Grid -->
+                <div class="grid grid-cols-4 gap-2">
+                    <div class="bg-[#090d16] border border-slate-800/80 rounded-xl p-2.5 text-center">
+                        <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Kalp Hızı</span>
+                        <strong id="heartRate" class="text-xs font-bold text-slate-100 mt-1 block mono-font">75 bpm</strong>
+                    </div>
+                    <div class="bg-[#090d16] border border-slate-800/80 rounded-xl p-2.5 text-center">
+                        <span class="text-[9px] text-slate-400 uppercase tracking-wider block">QRS</span>
+                        <strong id="qrsValue" class="text-xs font-bold text-slate-100 mt-1 block mono-font">84 ms</strong>
+                    </div>
+                    <div class="bg-[#090d16] border border-slate-800/80 rounded-xl p-2.5 text-center">
+                        <span class="text-[9px] text-slate-400 uppercase tracking-wider block">PR Aralığı</span>
+                        <strong id="prValue" class="text-xs font-bold text-slate-100 mt-1 block mono-font">152 ms</strong>
+                    </div>
+                    <div class="bg-[#090d16] border border-slate-800/80 rounded-xl p-2.5 text-center">
+                        <span class="text-[9px] text-slate-400 uppercase tracking-wider block">QTc</span>
+                        <strong id="qtValue" class="text-xs font-bold text-slate-100 mt-1 block mono-font">390 ms</strong>
+                    </div>
+                </div>
+
+                <!-- Detailed Findings -->
+                <div class="bg-[#090d16] border border-slate-800/80 rounded-xl p-3.5 flex flex-col gap-2">
+                    <h3 class="text-xs font-semibold text-slate-200">Derivasyon Analizi & Bilimsel Bulgular</h3>
+                    <ul id="findingsList" class="list-disc list-inside text-xs text-slate-400 flex flex-col gap-1.5 pl-1">
+                        <li>Normal sinüs ritmi (P dalgaları DII, III, aVF'de dik ve pozitif).</li>
+                        <li>PR mesafesi ve QRS ekseni fizyolojik aralıkta (120-200 ms).</li>
+                        <li>ST segmentlerinde iskemik elevasyon veya depresyon izlenmedi.</li>
+                    </ul>
+                </div>
+
+                <!-- Emergency Medical Report Box -->
+                <div class="bg-[#090d16] border border-slate-800/80 rounded-xl p-4 flex flex-col gap-3">
+                    <h3 class="text-xs font-semibold text-slate-200">Acil Klinik Karar Raporu</h3>
+                    <div class="flex justify-between text-[11px] text-slate-400 pb-2 border-b border-slate-800">
+                        <div>
+                            <span class="text-[9px] uppercase tracking-wider text-slate-500 block">Protokol No</span>
+                            <strong class="text-slate-300 font-semibold mono-font">#CV-2026-9482</strong>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[9px] uppercase tracking-wider text-slate-500 block">Zaman Damgası</span>
+                            <strong id="reportDate" class="text-slate-300 font-semibold mono-font">--</strong>
+                        </div>
+                    </div>
+                    <div id="reportContent" class="text-xs text-slate-400 leading-relaxed bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
+                        Hemodinamik olarak stabil normal sinüs bulguları. Akut koroner sendrom veya ritim bozukluğu saptanmadı.
+                    </div>
+                </div>
+
+                <!-- Action Bar -->
+                <div class="flex gap-2">
+                    <button id="exportPdfBtn" class="flex-1 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700 text-slate-200 py-3 rounded-xl text-xs font-semibold transition shadow-sm flex items-center justify-center gap-2 cursor-pointer">
+                        <span>📤</span>
+                        <span>Paylaş / Kopyala</span>
+                    </button>
+                    <button id="downloadPdfBtn" class="flex-1 bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-700 text-white py-3 rounded-xl text-xs font-semibold transition shadow-sm shadow-cyan-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                        <span>📥</span>
+                        <span>PDF İndir / Yazdır</span>
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Slide-over Drawer for Rhythms & Telemetry Parameters -->
+        <div id="parameterDrawer" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex justify-end transition-opacity duration-300 opacity-0 pointer-events-none">
+            <div id="drawerPanel" class="w-full max-w-sm bg-[#090d16] border-l border-slate-800 h-full p-5 flex flex-col gap-5 overflow-y-auto transform translate-x-full transition-transform duration-300">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                        <h3 class="text-sm font-bold text-slate-100">Ritim & Telemetri Ayarları</h3>
+                    </div>
+                    <button id="closeDrawerBtn" class="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm cursor-pointer">✕</button>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-slate-300 flex justify-between">
+                            <span>Kalp Hızı (HR):</span>
+                            <span id="sliderHrVal" class="text-cyan-400 mono-font">75 bpm</span>
+                        </label>
+                        <input id="hrSlider" type="range" min="30" max="220" value="75" class="w-full accent-cyan-400 bg-slate-800 h-2 rounded-lg cursor-pointer" />
+                    </div>
+
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-slate-300 flex justify-between">
+                            <span>QRS Süresi:</span>
+                            <span id="sliderQrsVal" class="text-cyan-400 mono-font">84 ms</span>
+                        </label>
+                        <input id="qrsSlider" type="range" min="60" max="200" value="84" class="w-full accent-cyan-400 bg-slate-800 h-2 rounded-lg cursor-pointer" />
+                    </div>
+
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-slate-300 flex justify-between">
+                            <span>PR Aralığı:</span>
+                            <span id="sliderPrVal" class="text-cyan-400 mono-font">150 ms</span>
+                        </label>
+                        <input id="prSlider" type="range" min="100" max="300" value="150" class="w-full accent-cyan-400 bg-slate-800 h-2 rounded-lg cursor-pointer" />
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5 flex flex-col gap-2">
+                    <h4 class="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Simülasyon Modu Bilgisi</h4>
+                    <p class="text-[11px] text-slate-400 leading-relaxed">
+                        Kaydırma çubuklarını ayarlayarak 12 derivasyonlu şeritlerin frekansını, dalga genişliğini ve interval mesafelerini anlık olarak simüle edebilirsiniz.
+                    </p>
+                </div>
+
+                <div class="mt-auto pt-4 border-t border-slate-800">
+                    <button id="applyParamsBtn" class="w-full bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition cursor-pointer">
+                        Parametreleri Uygula
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const ecgUpload = document.getElementById('ecgUpload');
+            const uploadedImage = document.getElementById('uploadedImage');
+            const emptyState = document.getElementById('emptyState');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const sampleCards = document.querySelectorAll('.sample-card');
+            const previewStatus = document.getElementById('previewStatus');
+
+            const summaryTitle = document.getElementById('summaryTitle');
+            const riskPill = document.getElementById('riskPill');
+            const heartRate = document.getElementById('heartRate');
+            const qrsValue = document.getElementById('qrsValue');
+            const prValue = document.getElementById('prValue');
+            const qtValue = document.getElementById('qtValue');
+            const findingsList = document.getElementById('findingsList');
+            const reportContent = document.getElementById('reportContent');
+            const reportDate = document.getElementById('reportDate');
+            const exportPdfBtn = document.getElementById('exportPdfBtn');
+            const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+            const activeLeadStatus = document.getElementById('activeLeadStatus');
+
+            const openDrawerBtn = document.getElementById('openDrawerBtn');
+            const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+            const parameterDrawer = document.getElementById('parameterDrawer');
+            const drawerPanel = document.getElementById('drawerPanel');
+            const hrSlider = document.getElementById('hrSlider');
+            const qrsSlider = document.getElementById('qrsSlider');
+            const prSlider = document.getElementById('prSlider');
+            const sliderHrVal = document.getElementById('sliderHrVal');
+            const sliderQrsVal = document.getElementById('sliderQrsVal');
+            const sliderPrVal = document.getElementById('sliderPrVal');
+            const applyParamsBtn = document.getElementById('applyParamsBtn');
+
+            const multiLeadCanvas = document.getElementById('multiLeadCanvas');
+            const ctx = multiLeadCanvas ? multiLeadCanvas.getContext('2d') : null;
+
+            let currentScenario = 'normal';
+            let customHr = 75;
+            let customQrs = 84;
+            let customPr = 150;
+            let animOffset = 0;
+
+            const expertScenarios = {
+                normal: {
+                    title: "Normal Sinüs Ritmi",
+                    risk: "Normal",
+                    riskClass: "success",
+                    hr: "75 bpm",
+                    qrs: "84 ms",
+                    pr: "152 ms",
+                    qt: "390 ms",
+                    findings: [
+                        "Normal sinüs ritmi (P dalgaları DII, III, aVF'de dik ve pozitif).",
+                        "PR mesafesi ve QRS ekseni fizyolojik aralıkta (120-200 ms).",
+                        "ST segmentlerinde iskemik elevasyon veya depresyon izlenmedi."
+                    ],
+                    report: "Hemodinamik olarak stabil normal sinüs bulguları. Akut koroner sendrom veya ritim bozukluğu saptanmadı."
+                },
+                anteriorStemi: {
+                    title: "Akut Anterior STEMI (LAD Oklüzyonu)",
+                    risk: "Kritik Acil",
+                    riskClass: "danger",
+                    hr: "98 bpm",
+                    qrs: "112 ms",
+                    pr: "160 ms",
+                    qt: "450 ms",
+                    findings: [
+                        "V1-V4 derivasyonlarında belirgin konkav/konveks ST elevasyonu.",
+                        "I ve aVL'de karşılıklı (reciprocal) ST depresyonları.",
+                        "V1-V3'te Q dalgası gelişimi başlangıcı (akut miyokard hasarı)."
+                    ],
+                    report: "ACİL: Akut Anterior STEMI. Derhal Kardiyoloji Uzmanı konsültasyonu, Primer KAG (Anjiyografi Lab) aktivasyonu ve acil hekim yönetimi gerektirir."
+                },
+                inferiorStemi: {
+                    title: "Akut İnferior STEMI (RCA / LCx Oklüzyonu)",
+                    risk: "Kritik Acil",
+                    riskClass: "danger",
+                    hr: "62 bpm",
+                    qrs: "102 ms",
+                    pr: "170 ms",
+                    qt: "440 ms",
+                    findings: [
+                        "DII, DIII ve aVF derivasyonlarında j-noktası ST elevasyonu.",
+                        "DIII elevasyonu > DII elevasyonu (RCA tutulumu lehine).",
+                        "Sağ ventrikül tutulumu açısından V3R-V4R değerlendirilmelidir."
+                    ],
+                    report: "ACİL: İnferior duvar miyokard enfarktüsü. Bradikardi eşlik edebilir; IV damar yolu açılıp acil reperfüzyon protokolü başlatılmalıdır."
+                },
+                vt: {
+                    title: "Ventriküler Taşikardi (VT / Geniş QRS)",
+                    risk: "Kritik Acil",
+                    riskClass: "danger",
+                    hr: "185 bpm",
+                    qrs: "172 ms",
+                    pr: "Ayrıştırılamaz",
+                    qt: "520 ms",
+                    findings: [
+                        "Geniş QRS kompleksleri (>120 ms) ile giden düzenli taşiarritmi.",
+                        "Atriyoventriküler disosiyasyon ve QRS morfology bulguları.",
+                        "Hemodinamik instabilite riski çok yüksek."
+                    ],
+                    report: "ACİL RESÜSİTASYON UYARISI: Ventriküler Taşikardi. Hasta bilinci ve hemodinamisi acilen değerlendirilmeli; stabil değilse senkronize kardiyoversiyon uygulanmalıdır."
+                },
+                af: {
+                    title: "Atriyal Fibrilasyon + Hızlı Ventriküler Yanıt",
+                    risk: "Yüksek Risk",
+                    riskClass: "warning",
+                    hr: "134 bpm",
+                    qrs: "90 ms",
+                    pr: "Yok (P yok)",
+                    qt: "380 ms",
+                    findings: [
+                        "P dalgalarının yerini alan düzensiz f (fibrilasyon) dalgaları.",
+                        "RR aralıklarının tamamen düzensiz seyri (Irregularly irregular).",
+                        "Hızlı ventriküler yanıt (HR > 100 bpm)."
+                    ],
+                    report: "Atriyal Fibrilasyon ve RVR. Ventrikül hızını yavaşlatıcı ajanlar (Beta bloker / Kalsiyum kanal blokeri) ve tromboemboli risk değerlendirmesi önerilir."
+                },
+                brugada: {
+                    title: "Brugada Sendromu (Tip 1 EKG Paterni)",
+                    risk: "Kritik Acil",
+                    riskClass: "danger",
+                    hr: "78 bpm",
+                    qrs: "116 ms",
+                    pr: "150 ms",
+                    qt: "410 ms",
+                    findings: [
+                        "V1-V2 derivasyonlarında coved-type (kubbe tarzı) ST elevasyonu (>= 2mm).",
+                        "ST segmentini takip eden negatif T dalgası.",
+                        "Ani kardiyak ölüm riski taşıyan kanalopatiler açısından yüksek risk."
+                    ],
+                    report: "Kritik Aritmi Riski: Brugada Tip 1 EKG paterni. Elektrofizyoloji (EP) konsültasyonu ve Holter/Aritmi takibi acilen planlanmalıdır."
+                },
+                hyperkalemia: {
+                    title: "Şiddetli Hiperkalemi (K+ > 6.5 mEq/L)",
+                    risk: "Kritik Acil",
+                    riskClass: "danger",
+                    hr: "54 bpm",
+                    qrs: "145 ms",
+                    pr: "Uzlamış / Kayıp",
+                    qt: "Kısalmış",
+                    findings: [
+                        "Derivasyonlarda sivri, dar tabanlı ve yüksek 'tenting' T dalgaları.",
+                        "P dalgalarında düzleşme / silinme ve QRS komplekslerinde belirgin genişleme.",
+                        "Sinüs dalgası (sine-wave) formasyonuna ilerleme riski."
+                    ],
+                    report: "ACİL METABOLİK KRİZ: Hiperkalemi bulguları. IV Kalsiyum Glukonat, insülin+glukoz infüzyonu ve acil nefroloji yönetimi başlatılmalıdır."
+                },
+                avBlock3: {
+                    title: "3. Derece (Komplet) AV Blok",
+                    risk: "Kritik Acil",
+                    riskClass: "danger",
+                    hr: "38 bpm",
+                    qrs: "135 ms",
+                    pr: "Tamamen Bağımsız",
+                    qt: "480 ms",
+                    findings: [
+                        "Atriyumlar (P dalgaları) ile ventriküller (QRS) arasında iletim bağı tamamen kopmuş.",
+                        "P dalgaları kendi hızında, QRS kompleksleri ise bağımsız kaçış odağıyla yavaş atıyor.",
+                        "Ciddi bradikardi ve hemodinamik çöküş riski."
+                    ],
+                    report: "ACİL TRİYAJ: Komplet AV Blok. Atriyoventriküler disosiyasyon saptandı. Acil transkütanöz/transvenöz pacemaker hazırlığı yapılmalıdır."
+                }
+            };
+
+            const leadsOrder = ['I', 'aVR', 'V1', 'V4', 'II', 'aVL', 'V2', 'V5', 'III', 'aVF', 'V3', 'V6'];
+
+            function draw12LeadStrips(scenarioKey) {
+                if (!ctx || !multiLeadCanvas) return;
+                
+                const parent = multiLeadCanvas.parentElement;
+                if (parent && parent.clientWidth > 0) {
+                    if (multiLeadCanvas.width !== parent.clientWidth - 16) {
+                        multiLeadCanvas.width = parent.clientWidth - 16;
+                    }
+                }
+
+                const width = multiLeadCanvas.width;
+                const height = multiLeadCanvas.height;
+                const rows = 4;
+                const cols = 3;
+                const rowHeight = height / rows;
+                const colWidth = width / cols;
+
+                ctx.clearRect(0, 0, width, height);
+
+                // Grid background
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.15)';
+                ctx.lineWidth = 0.6;
+                for (let x = 0; x < width; x += 10) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+                }
+                for (let y = 0; y < height; y += 10) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+                }
+
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.35)';
+                ctx.lineWidth = 1;
+                for (let r = 0; r <= rows; r++) {
+                    ctx.beginPath(); ctx.moveTo(0, r * rowHeight); ctx.lineTo(width, r * rowHeight); ctx.stroke();
+                }
+                for (let c = 0; c <= cols; c++) {
+                    ctx.beginPath(); ctx.moveTo(c * colWidth, 0); ctx.lineTo(c * colWidth, height); ctx.stroke();
+                }
+
+                let dynamicPeriod = Math.floor(110 * (75 / customHr));
+                if (dynamicPeriod < 50) dynamicPeriod = 50;
+                if (dynamicPeriod > 180) dynamicPeriod = 180;
+
+                leadsOrder.forEach((leadName, index) => {
+                    const r = Math.floor(index / cols);
+                    const c = index % cols;
+                    const startX = c * colWidth;
+                    const startY = r * rowHeight;
+                    const centerY = startY + (rowHeight / 2);
+
+                    ctx.fillStyle = '#f87171';
+                    ctx.font = 'bold 11px JetBrains Mono, monospace';
+                    ctx.fillText(leadName, startX + 8, startY + 16);
+
+                    ctx.strokeStyle = '#fca5a5';
+                    ctx.lineWidth = 1.6;
+                    ctx.beginPath();
+
+                    let isStemiLead = false;
+                    if (scenarioKey === 'anteriorStemi' && ['V1', 'V2', 'V3', 'V4'].includes(leadName)) isStemiLead = true;
+                    if (scenarioKey === 'inferiorStemi' && ['II', 'III', 'aVF'].includes(leadName)) isStemiLead = true;
+                    if (scenarioKey === 'brugada' && ['V1', 'V2'].includes(leadName)) isStemiLead = true;
+
+                    for (let x = startX + 20; x < startX + colWidth - 5; x += 1.5) {
+                        let relX = x - startX;
+                        let phase = ((relX + animOffset) % dynamicPeriod);
+                        let y = centerY;
+
+                        y += Math.sin((x + animOffset) * 0.02) * 0.8;
+
+                        if (scenarioKey === 'hyperkalemia') {
+                            if (phase > 25 && phase < (25 + Math.floor(customQrs / 4))) {
+                                let qrsProg = (phase - 25) / (customQrs / 4);
+                                y -= Math.sin(qrsProg * Math.PI) * (leadName === 'aVR' ? -18 : 24);
+                            } else if (phase >= 55 && phase < 85) {
+                                let tProg = (phase - 55) / 30;
+                                y -= Math.sin(tProg * Math.PI) * 32;
+                            }
+                        } else if (scenarioKey === 'avBlock3') {
+                            let pPhase = ((relX + animOffset * 1.2) % 50);
+                            if (pPhase > 12 && pPhase < 22) {
+                                y -= Math.sin(((pPhase - 12) / 10) * Math.PI) * 7;
+                            }
+                            let qrsPhase = ((relX + animOffset * 0.7) % (dynamicPeriod * 1.8));
+                            if (qrsPhase > 60 && qrsPhase < (60 + Math.floor(customQrs / 3.5))) {
+                                let qProg = (qrsPhase - 60) / (customQrs / 3.5);
+                                y -= Math.sin(qProg * Math.PI) * 26;
+                            }
+                        } else {
+                            let pOffset = Math.floor(customPr / 10);
+                            if (phase > (12 + pOffset) && phase < (22 + pOffset) && scenarioKey !== 'af') {
+                                let pProg = (phase - (12 + pOffset)) / 10;
+                                y -= Math.sin(pProg * Math.PI) * (leadName === 'aVR' ? -5 : 6);
+                            } else if (phase >= 32 && phase < 36) {
+                                y += 4;
+                            } else if (phase >= 36 && phase < (36 + Math.floor(customQrs / 5))) {
+                                let rProg = (phase - 36) / (customQrs / 5);
+                                let rHeight = (scenarioKey === 'vt' || customQrs > 120) ? 38 : 32;
+                                y -= Math.sin(rProg * Math.PI) * (leadName === 'aVR' ? -rHeight * 0.8 : rHeight);
+                            } else if (phase >= (36 + Math.floor(customQrs / 5)) && phase < 52) {
+                                let sProg = (phase - (36 + Math.floor(customQrs / 5))) / 16;
+                                let stElev = isStemiLead ? 16 : 0;
+                                y += (12 - stElev) * Math.sin(sProg * Math.PI);
+                            } else if (phase > 62 && phase < 84) {
+                                let tProg = (phase - 62) / 22;
+                                y -= Math.sin(tProg * Math.PI) * (isStemiLead ? 12 : 14);
+                            }
+                        }
+
+                        if (x === startX + 20) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                });
+            }
+
+            function startAnimationLoop() {
+                animOffset += 2;
+                draw12LeadStrips(currentScenario);
+                requestAnimationFrame(startAnimationLoop);
+            }
+
+            window.onload = function() {
+                setTimeout(() => {
+                    draw12LeadStrips(currentScenario);
+                    startAnimationLoop();
+                }, 100);
+            };
+            
+            setTimeout(() => {
+                draw12LeadStrips(currentScenario);
+            }, 50);
+
+            if (reportDate) reportDate.textContent = new Date().toLocaleString('tr-TR');
+
+            if (openDrawerBtn && parameterDrawer && drawerPanel) {
+                openDrawerBtn.addEventListener('click', () => {
+                    parameterDrawer.classList.remove('opacity-0', 'pointer-events-none');
+                    drawerPanel.classList.remove('translate-x-full');
+                });
+            }
+
+            function closeDrawer() {
+                if (parameterDrawer && drawerPanel) {
+                    parameterDrawer.classList.add('opacity-0', 'pointer-events-none');
+                    drawerPanel.classList.add('translate-x-full');
+                }
+            }
+
+            if (closeDrawerBtn) closeDrawerBtn.addEventListener('click', closeDrawer);
+            if (parameterDrawer) {
+                parameterDrawer.addEventListener('click', (e) => {
+                    if (e.target === parameterDrawer) closeDrawer();
+                });
+            }
+
+            if (hrSlider && sliderHrVal) {
+                hrSlider.addEventListener('input', () => {
+                    customHr = parseInt(hrSlider.value);
+                    sliderHrVal.textContent = customHr + ' bpm';
+                });
+            }
+            if (qrsSlider && sliderQrsVal) {
+                qrsSlider.addEventListener('input', () => {
+                    customQrs = parseInt(qrsSlider.value);
+                    sliderQrsVal.textContent = customQrs + ' ms';
+                });
+            }
+            if (prSlider && sliderPrVal) {
+                prSlider.addEventListener('input', () => {
+                    customPr = parseInt(prSlider.value);
+                    sliderPrVal.textContent = customPr + ' ms';
+                });
+            }
+
+            if (applyParamsBtn) {
+                applyParamsBtn.addEventListener('click', () => {
+                    if (heartRate) heartRate.textContent = customHr + ' bpm';
+                    if (qrsValue) qrsValue.textContent = customQrs + ' ms';
+                    if (prValue) prValue.textContent = customPr + ' ms';
+                    draw12LeadStrips(currentScenario);
+                    closeDrawer();
+                });
+            }
+
+            if (ecgUpload) {
+                ecgUpload.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            if (uploadedImage) {
+                                uploadedImage.src = event.target.result;
+                                uploadedImage.hidden = false;
+                            }
+                            if (emptyState) emptyState.hidden = true;
+                            currentScenario = 'anteriorStemi';
+                            if (previewStatus) previewStatus.textContent = "Görsel Yüklendi (Analize Hazır)";
+                            draw12LeadStrips('anteriorStemi');
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            sampleCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const key = card.getAttribute('data-sample');
+                    currentScenario = key;
+                    const data = expertScenarios[key];
+
+                    if (key === 'normal') { customHr = 75; customQrs = 84; customPr = 150; }
+                    else if (key === 'anteriorStemi' || key === 'inferiorStemi') { customHr = 95; customQrs = 104; customPr = 160; }
+                    else if (key === 'vt') { customHr = 180; customQrs = 172; customPr = 150; }
+                    else if (key === 'af') { customHr = 135; customQrs = 90; customPr = 130; }
+                    else if (key === 'brugada') { customHr = 78; customQrs = 116; customPr = 150; }
+                    else if (key === 'hyperkalemia') { customHr = 54; customQrs = 145; customPr = 180; }
+                    else if (key === 'avBlock3') { customHr = 38; customQrs = 135; customPr = 200; }
+
+                    if (hrSlider) hrSlider.value = customHr;
+                    if (qrsSlider) qrsSlider.value = customQrs;
+                    if (prSlider) prSlider.value = customPr;
+                    if (sliderHrVal) sliderHrVal.textContent = customHr + ' bpm';
+                    if (sliderQrsVal) sliderQrsVal.textContent = customQrs + ' ms';
+                    if (sliderPrVal) sliderPrVal.textContent = customPr + ' ms';
+
+                    if (uploadedImage) {
+                        uploadedImage.src = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='350' height='160'><rect width='100%' height='100%' fill='%23040711'/><text x='50%' y='45%' fill='%2306b6d4' font-size='13' font-weight='bold' font-family='sans-serif' text-anchor='middle'>[ KLİNİK ECG: ${data.title} ]</text><text x='50%' y='65%' fill='%2394a3b8' font-size='10' font-family='sans-serif' text-anchor='middle'>12-Derivasyon Şerit Aktif</text></svg>`;
+                        uploadedImage.hidden = false;
+                    }
+                    if (emptyState) emptyState.hidden = true;
+                    if (previewStatus) previewStatus.textContent = "Senaryo Yüklendi";
+
+                    if (summaryTitle) summaryTitle.textContent = data.title;
+                    if (riskPill) {
+                        riskPill.textContent = data.risk;
+                        riskPill.className = `px-3 py-1 rounded-full text-[10px] font-extrabold uppercase border tracking-wider ${
+                            data.riskClass === 'danger' ? 'bg-red-500/10 text-red-400 border-red-500/30' :
+                            (data.riskClass === 'warning' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30')
+                        }`;
+                    }
+                    if (heartRate) heartRate.textContent = customHr + ' bpm';
+                    if (qrsValue) qrsValue.textContent = customQrs + ' ms';
+                    if (prValue) prValue.textContent = customPr + ' ms';
+                    if (qtValue) qtValue.textContent = data.qt;
+
+                    if (findingsList) {
+                        findingsList.innerHTML = '';
+                        data.findings.forEach(f => {
+                            const li = document.createElement('li');
+                            li.textContent = f;
+                            findingsList.appendChild(li);
+                        });
+                    }
+                    if (reportContent) reportContent.textContent = data.report;
+                    if (activeLeadStatus) activeLeadStatus.textContent = data.title;
+
+                    draw12LeadStrips(key);
+                });
+            });
+
+            if (analyzeBtn) {
+                analyzeBtn.addEventListener('click', () => {
+                    const data = expertScenarios[currentScenario] || expertScenarios['normal'];
+                    if (summaryTitle) summaryTitle.textContent = data.title;
+                    if (riskPill) {
+                        riskPill.textContent = data.risk;
+                        riskPill.className = `px-3 py-1 rounded-full text-[10px] font-extrabold uppercase border tracking-wider ${
+                            data.riskClass === 'danger' ? 'bg-red-500/10 text-red-400 border-red-500/30' :
+                            (data.riskClass === 'warning' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30')
+                        }`;
+                    }
+                    if (heartRate) heartRate.textContent = customHr + ' bpm';
+                    if (qrsValue) qrsValue.textContent = customQrs + ' ms';
+                    if (prValue) prValue.textContent = customPr + ' ms';
+
+                    if (findingsList) {
+                        findingsList.innerHTML = '';
+                        data.findings.forEach(f => {
+                            const li = document.createElement('li');
+                            li.textContent = f;
+                            findingsList.appendChild(li);
+                        });
+                    }
+                    if (reportContent) reportContent.textContent = data.report;
+                    draw12LeadStrips(currentScenario);
+                });
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    currentScenario = 'normal';
+                    customHr = 75; customQrs = 84; customPr = 150;
+                    if (hrSlider) hrSlider.value = 75;
+                    if (qrsSlider) qrsSlider.value = 84;
+                    if (prSlider) prSlider.value = 150;
+                    if (sliderHrVal) sliderHrVal.textContent = "75 bpm";
+                    if (sliderQrsVal) sliderQrsVal.textContent = "84 ms";
+                    if (sliderPrVal) sliderPrVal.textContent = "150 ms";
+
+                    if (uploadedImage) uploadedImage.hidden = true;
+                    if (emptyState) emptyState.hidden = false;
+                    if (ecgUpload) ecgUpload.value = '';
+                    if (previewStatus) previewStatus.textContent = "Giriş Bekleniyor";
+
+                    if (summaryTitle) summaryTitle.textContent = "Normal Sinüs Ritmi";
+                    if (riskPill) {
+                        riskPill.textContent = "NORMAL";
+                        riskPill.className = "px-3 py-1 rounded-full text-[10px] font-extrabold uppercase border bg-emerald-500/10 text-emerald-400 border-emerald-500/30 tracking-wider";
+                    }
+                    if (heartRate) heartRate.textContent = "75 bpm";
+                    if (qrsValue) qrsValue.textContent = "84 ms";
+                    if (prValue) prValue.textContent = "152 ms";
+                    if (qtValue) qtValue.textContent = "390 ms";
+                    if (findingsList) {
+                        findingsList.innerHTML = `
+                            <li>Normal sinüs ritmi (P dalgaları DII, III, aVF'de dik ve pozitif).</li>
+                            <li>PR mesafesi ve QRS ekseni fizyolojik aralıkta (120-200 ms).</li>
+                            <li>ST segmentlerinde iskemik elevasyon veya depresyon izlenmedi.</li>
+                        `;
+                    }
+                    if (reportContent) reportContent.textContent = "Hemodinamik olarak stabil normal sinüs bulguları. Akut koroner sendrom veya ritim bozukluğu saptanmadı.";
+                    if (activeLeadStatus) activeLeadStatus.textContent = "Normal Sinüs Ritmi";
+                    draw12LeadStrips('normal');
+                });
+            }
+
+            if (exportPdfBtn) {
+                exportPdfBtn.addEventListener('click', async () => {
+                    const titleText = summaryTitle ? summaryTitle.textContent : 'Rapor';
+                    const riskText = riskPill ? riskPill.textContent : '';
+                    const hrText = heartRate ? heartRate.textContent : '';
+                    const qrsText = qrsValue ? qrsValue.textContent : '';
+                    const reportText = reportContent ? reportContent.textContent : '';
+
+                    const summaryText = `--- CARDIOVISION PRO KLİNİK RAPORU ---\nTanı: ${titleText}\nRisk Düzeyi: ${riskText}\nKalp Hızı: ${hrText} | QRS: ${qrsText}\n\nKlinik Özet:\n${reportText}\n\nProtokol: #CV-2026-9482`;
+
+                    if (navigator.share) {
+                        try {
+                            await navigator.share({
+                                title: 'CardioVision Pro - Klinik ECG Raporu',
+                                text: summaryText
+                            });
+                            return;
+                        } catch (err) {
+                            if (err.name !== 'AbortError') {
+                                console.log('Share API fallback to clipboard', err);
+                            } else {
+                                return;
+                            }
+                        }
+                    }
+
+                    const textarea = document.createElement('textarea');
+                    textarea.value = summaryText;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.focus();
+                    textarea.select();
+
+                    try {
+                        document.execCommand('copy');
+                        alert('Klinik rapor başarıyla panoya kopyalandı.');
+                    } catch (err) {
+                        alert('Paylaşma ve kopyalama işlemi gerçekleştirilemedi.');
+                    }
+                    document.body.removeChild(textarea);
+                });
+            }
+
+            if (downloadPdfBtn) {
+                downloadPdfBtn.addEventListener('click', () => {
+                    const titleText = summaryTitle ? summaryTitle.textContent : 'Rapor Bekleniyor';
+                    const riskText = riskPill ? riskPill.textContent : '-';
+                    const hrText = heartRate ? heartRate.textContent : '--';
+                    const qrsText = qrsValue ? qrsValue.textContent : '--';
+                    const prText = prValue ? prValue.textContent : '--';
+                    const qtText = qtValue ? qtValue.textContent : '--';
+                    const reportText = reportContent ? reportContent.textContent : 'Rapor detayı bulunmuyor.';
+                    const dateText = reportDate ? reportDate.textContent : new Date().toLocaleString('tr-TR');
+                    
+                    // Canvas üzerindeki anlık EKG şerit görüntüsünü alıyoruz
+                    const ecgImageBase64 = multiLeadCanvas ? multiLeadCanvas.toDataURL('image/png') : '';
+
+                    const printWindow = window.open('', '_blank');
+                    if (!printWindow) {
+                        alert('Lütfen tarayıcınızda açılır pencere (pop-up) engelleyicisini kapatın.');
+                        return;
+                    }
+
+                    printWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html lang="tr">
+                        <head>
+                            <meta charset="UTF-8">
+                            <title>CardioVision Pro - Klinik ECG Raporu (#CV-2026-9482)</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; padding: 30px; color: #111; line-height: 1.5; }
+                                h1 { font-size: 20px; color: #1d4ed8; margin-bottom: 5px; }
+                                .subtitle { font-size: 12px; color: #666; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 1px; }
+                                .box { background: #f8fafc; border: 1px solid #cbd5e1; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+                                .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; text-align: center; }
+                                .metric { background: #f1f5f9; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; }
+                                .metric span { font-size: 10px; color: #64748b; display: block; text-transform: uppercase; }
+                                .metric strong { font-size: 14px; color: #0f172a; margin-top: 4px; display: block; }
+                                .footer { margin-top: 40px; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+                                .ecg-strip { width: 100%; background: #030712; border: 2px solid #ef4444; border-radius: 8px; margin-bottom: 20px; object-fit: contain; }
+                            </style>
+                        </head>
+                        <body>
+                            <h1>CardioVision Pro - Klinik ECG Değerlendirme Raporu</h1>
+                            <div class="subtitle">Protokol: #CV-2026-9482 | Tarih: ${dateText}</div>
+                            
+                            <div class="box">
+                                <strong style="font-size: 11px; color: #64748b; text-transform: uppercase; display: block;">Klinik Tanı Öngörüsü</strong>
+                                <h2 style="font-size: 18px; margin: 5px 0 10px 0; color: #0f172a;">${titleText}</h2>
+                                <div style="display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; background: #e2e8f0; color: #334155;">
+                                    RİSK DÜZEYİ: ${riskText}
+                                </div>
+                            </div>
+
+                            <div class="grid">
+                                <div class="metric"><span>Kalp Hızı</span><strong>${hrText}</strong></div>
+                                <div class="metric"><span>QRS Süresi</span><strong>${qrsText}</strong></div>
+                                <div class="metric"><span>PR Aralığı</span><strong>${prText}</strong></div>
+                                <div class="metric"><span>QTc Değeri</span><strong>${qtText}</strong></div>
+                            </div>
+                            
+                            <!-- EKG Şerit Görüntüsü -->
+                            <strong style="font-size: 11px; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 8px;">12-Derivasyon EKG Şeridi (Anlık)</strong>
+                            <img src="${ecgImageBase64}" class="ecg-strip" alt="12-Lead ECG Strip" />
+
+                            <div class="box">
+                                <strong style="font-size: 11px; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 6px;">Acil Klinik Karar Özeti</strong>
+                                <p style="font-size: 13px; color: #334155; margin: 0;">${reportText}</p>
+                            </div>
+
+                            <div class="footer">
+                                Bu rapor CardioVision Pro Klinik Karar Destek sistemi tarafından otomatik üretilmiştir. Kesin tanı için uzman hekim değerlendirmesi şarttır.
+                            </div>
+
+                            <script>
+                                window.onload = function() {
+                                    // Resmin yüklenmesi için ufak bir gecikme ekliyoruz
+                                    setTimeout(() => { window.print(); }, 250);
+                                };
+                            <\/script>
+                        </body>
+                        </html>
+                    `);
+                    printWindow.document.close();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
