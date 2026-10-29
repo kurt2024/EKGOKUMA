@@ -1,0 +1,9 @@
+{
+"appId": "com.cardiovision.pro",
+"appName": "CardioVision Pro",
+"webDir": "www",
+"bundledWebRuntime": false,
+"android": {
+"backgroundColor": "#040711"
+}
+}
